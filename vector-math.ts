@@ -16,20 +16,21 @@ class Vector {
      */
     constructor(mag: number, dir: number) {
         this._r = mag
-        this.dir = dir
+        this.dir = dir // call to property dir
     }   // constructor(number, number)
 
     /**
      * Get the direction of the vector in degrees.
      */
+    //% blockSetVariable="myVector"
     //% blockCombine block="direction"
     get dir() {
         return this._dir
     }   // get dir()
-
     /**
      * Set the direction of the vector in degrees.
      */
+    //% blockSetVariable="myVector"
     //% blockCombine block="direction"
     set dir(value: number) {
         this._dir = value
@@ -40,6 +41,7 @@ class Vector {
     /**
      * Get the magnitude of the vector.
      */
+    //% blockSetVariable="myVector"
     //% blockCombine block="magnitude (size)"
     get mag(): number {
         return this._r
@@ -48,7 +50,8 @@ class Vector {
     /**
      * Set the magnitude of the vector.
      */
-    //% blockCombine block="magnitude (size)"
+    //% blockSetVariable="myVector"
+    //% blockCombine block="magnitude (size)"s
     set mag(value: number) {
         this._r = value
         this.calcCartesian()
@@ -57,7 +60,8 @@ class Vector {
     /**
      * Get the horizontal component of the vector in the Cartesian plane.
      */
-    //% blockCombine
+    //% blockSetVariable="myVector"
+    //% blockCombine block="x"
     get x(): number {
         return this._x
     }   // get x()
@@ -65,19 +69,18 @@ class Vector {
     /**
      * Get the vertical component of the vector in the Cartesian plane.
      */
-    //% blockCombine
+    //% blockSetVariable="myVector"
+    //% blockCombine block="y"
     get y(): number {
         return this._y
     }   // get y()
-
     /**
      * Update the Cartesian representation of the vector.
      */
     calcCartesian(): void {
-        this._x = this._r * Math.cos(this._theta)
-        this._y = this._r * Math.sin(this._theta)
+        this._x = Math.round(this._r * Math.cos(this._theta))
+        this._y = Math.round(this._r * Math.sin(this._theta))
     }   // calcCartesian()
-
     /**
      * Convert degrees to radians
      * @param {number} angle - The angle to convert in degrees.
@@ -107,6 +110,7 @@ namespace vectorMath {
      * Create a vector.
      */
     //% blockId=vectormath_create_vector
+    //% blockSetVariable=myVector
     //% block="create vector with magnitude %mag and direction %dir"
     //% mag.defl=0 dir.defl=0
     export function createVector(mag: number, dir: number): Vector {
@@ -117,11 +121,40 @@ namespace vectorMath {
      * Create a vector from sprites.
      */
     //% blockId=vectormath_create_vector_from_sprites
-    //% block="create vector from sprite %spriteFrom to sprite %spriteTo"
-    //% spriteFrom.defl=mySprite spriteTo.defl=otherSprite
+    //% blockSetVariable=myVector
+    //% block="create vector from sprite %spriteFrom=variables_get(fromSprite) to sprite %spriteTo=variables_get(toSprite)"
     export function createVectorFromSprites(spriteFrom: Sprite, spriteTo: Sprite): Vector {
         let mag = Math.sqrt((spriteFrom.x - spriteTo.x) ** 2 + (spriteFrom.y - spriteTo.y) ** 2)
         let dir = Vector.rad2deg(Math.atan2(spriteTo.y - spriteFrom.y, spriteTo.x - spriteFrom.x))
         return new Vector(mag, dir)
     }   // createVectorFromSprites()
+
+    /**
+     * get mag and dir as text string
+     */
+    //% blockSetVariable=myTextVector
+    //% block="get vetcor %v=variables_get(myVector) as text"
+    export function text(v:Vector): string {
+        return v.mag.toString() + "|" +  v.dir.toString()
+    }
+    /**
+     * Create a vector fom text of mag | dir
+     */
+    //% blockId=vectormath_create_vector_from_string
+    //% blockSetVariable=myVector
+    //% block="create vector from text %magDirText"
+    //% magDirText.defl="0|0"
+    export function createVectorFromText(magDirText:string): Vector {
+        let a = magDirText.split("|")
+        let mag: number = parseInt(a[0])
+        let dir: number = parseInt(a[1])
+        return new Vector(mag, dir)
+    }   // createVectorFromText()
+
+    //% group="Create"
+    //% block="destroy %v=variables_get(myVector)"
+    export function destroy(v:Vector) {
+        v=null
+    }
+
 }   // namespace vectorMath
