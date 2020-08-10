@@ -22,33 +22,40 @@ namespace vectorMath {
      */
     //% group=Create
     //% blockId=createVectorLine
-    //% blockSetVariable=mySprite
-    //% block="create sprite with line from sprite %fromSprite=variables_get(fromSprite) along vector text $sVector"
+    //% blockSetVariable=arrow_sprite
+    //% block="create arrow %from_sprite=variables_get(from_sprite) for $vector_as_text=variables_get(vector_as_text) %color"
     //% sVector.defl="0|0"
-    export function draw_line_from_sprite_along_vector (fromSprite: Sprite, sVector: string) :Sprite{
-        let tmp_vector = vectorMath.createVectorFromText(sVector)
-        let wh = Math.max(Math.abs(tmp_vector.x), Math.abs(tmp_vector.y))
+    //% color.min=0 color.max-15 color.defl=2
+    export function draw_line_from_sprite_along_vector (from_sprite: Sprite, vector_as_text: string, color:number) :Sprite{
+        let V_tmp = createVectorFromText(vector_as_text)  
+        console.log("-----------------draw_line_from_sprite_along_vector")
+        console.log("Vmag = " + V_tmp.mag + " Vdir_degrees = " + V_tmp.dir_degrees + " Vdir_radians = " + V_tmp.dir_radians)
+        console.log("Vx = " + V_tmp.x + " Vy = " + V_tmp.y)
+        let wh = Math.max(Math.abs(V_tmp.x), Math.abs(V_tmp.y)) 
+        console.log("wh = " + wh )
         let line_image = image.create(wh, wh)
         let line_sprite = sprites.create(line_image, SpriteKind.Player)
         let x_from: number = 0
         let x_to: number = 0
         let y_from: number = 0
         let y_to: number = 0
-        if (tmp_vector.x >= 0) {
-            x_to = tmp_vector.x
-            line_sprite.left = fromSprite.x
+        if (V_tmp.x >= 0) {
+            x_to = V_tmp.x
+            line_sprite.left = from_sprite.x // center of from_sprite
         } else {
-            x_from = Math.abs(tmp_vector.x)
-            line_sprite.left = tmp_vector.x + fromSprite.x
+            x_from = Math.abs(V_tmp.x)
+            line_sprite.left = V_tmp.x + from_sprite.x
         }
-        if (tmp_vector.y >= 0) {
-            y_to = tmp_vector.y
-            line_sprite.top = fromSprite.y
+        if (V_tmp.y >= 0) {
+            y_to = V_tmp.y
+            line_sprite.top = from_sprite.y  // center of from_sprite
         } else {
-            y_from = Math.abs(tmp_vector.y)
-            line_sprite.top = tmp_vector.y + fromSprite.y
+            y_from = Math.abs(V_tmp.y)
+            line_sprite.top = V_tmp.y + from_sprite.y
         }
-        line_image.drawLine(x_from, y_from, x_to, y_to, 2)
+        console.log("x_from = " + x_from + "    x_to = " + x_to) 
+        console.log("y_from = " + y_from + "    y_to = " + y_to)
+        line_image.drawLine(x_from, y_from, x_to, y_to, color)
         return line_sprite
     }
     //% group="Create"
@@ -116,7 +123,7 @@ namespace vectorMath {
     //% blockSetVariable=myText
     //% block="get vetcor %v=variables_get(myVector) as text"
     export function text(v:Vector): string {
-        return v.mag.toString() + "|" +  v.dir.toString()
+        return v.mag.toString() + "|" +  v.dir_degrees.toString()
     }
 }   // namespace vectorMath
 /**
@@ -124,9 +131,9 @@ namespace vectorMath {
  */
 //% blockNamespace="vectorMath"
 class Vector {
-    private _r: number
-    private _theta: number // angle in radians
-    private _dir: number // angle in degrees
+    private _r: number    // mag
+    private _dir_radians: number // angle in radians
+    private _dir_degrees: number // angle in degrees
     private _x: number
     private _y: number
 
@@ -135,9 +142,9 @@ class Vector {
      * @param {number} mag - Magnitude of vector.
      * @param {number} dir - Direction of vector in degrees.
      */
-    constructor(mag: number, dir: number) {
+    constructor(mag: number, dir_degrees: number) {
         this._r = mag
-        this.dir = dir // call to property dir
+        this.dir_degrees = dir_degrees // call to property dir_degrees
     }   // constructor(number, number)
 
     /**
@@ -145,22 +152,38 @@ class Vector {
      */
     //% group=Properties
     //% blockSetVariable="myVector"
-    //% blockCombine block="direction"
-    get dir() {
-        return this._dir
+    //% blockCombine block="direction (degrees)"
+    get dir_degrees() {
+        return this._dir_degrees
     }   // get dir()
     /**
      * Set the direction of the vector in degrees.
      */
     //% group=Properties
     //% blockSetVariable="myVector"
-    //% blockCombine block="direction"
-    set dir(value: number) {
-        this._dir = value
-        this._theta = Vector.deg2rad(value)
+    //% blockCombine block="direction (degrees)"
+    set dir_degrees(value: number) {
+        this._dir_degrees = value
+        this._dir_radians = Vector.deg2rad(this._dir_degrees)
         this.calcCartesian()
     }   // set dir()
-
+    //% group=Properties
+    //% blockSetVariable="myVector"
+    //% blockCombine block="direction (radians)"
+    get dir_radians() {
+        return this._dir_radians
+    }   // get dir()
+    /**
+     * Set the direction of the vector in degrees.
+     */
+    //% group=Properties
+    //% blockSetVariable="myVector"
+    //% blockCombine block="direction (radians)"
+    set dir_radians(value: number) {
+        this._dir_radians = value
+        this._dir_degrees = Vector.deg2rad(this._dir_radians)
+        this.calcCartesian()
+    }   // set dir()
     /**
      * Get the magnitude of the vector.
      */
@@ -176,7 +199,7 @@ class Vector {
      */
     //% group=Properties
     //% blockSetVariable="myVector"
-    //% blockCombine block="magnitude (size)"s
+    //% blockCombine block="magnitude (length)"s
     set mag(value: number) {
         this._r = value
         this.calcCartesian()
@@ -205,8 +228,8 @@ class Vector {
      * Update the Cartesian representation of the vector.
      */
     calcCartesian(): void {
-        this._x = Math.round(this._r * Math.cos(this._theta))
-        this._y = Math.round(this._r * Math.sin(this._theta))
+        this._x = Math.round(this._r * Math.cos(this._dir_radians))
+        this._y = Math.round(this._r * Math.sin(this._dir_radians))
     }   // calcCartesian()
     /**
      * Convert degrees to radians
@@ -214,7 +237,7 @@ class Vector {
      * @return {number} The angle in radians.
      */
     static deg2rad(angle: number): number {
-        return Math.round(angle * Math.PI / 180)
+        return angle * Math.PI / 180   // do not round
     }   // deg2rad()
 
     /**
@@ -223,7 +246,7 @@ class Vector {
      * @return {number} The angle in degrees.
      */
     static rad2deg(theta: number): number {
-        return Math.round(theta * 180 / Math.PI)
+        return theta * 180 / Math.PI  // do not round
     }   // rad2deg
 }   // class Vector
 
