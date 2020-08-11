@@ -13,8 +13,8 @@ namespace vectorMath {
     //% blockSetVariable=myVector
     //% block="%sV1=variables_get(vectorAsString_A) + %sV2=variables_get(vectorAsString_B)"
     export function addVectors(sV1:string, sV2: string): Vector {
-        let v1 = createVectorFromText(sV1)
-        let v2 = createVectorFromText(sV2)
+        let v1: Vector  = createVectorFromText(sV1)
+        let v2: Vector = createVectorFromText(sV2)
         return createVectorXY(v1.x + v2.x, v1.y + v2.y)
     }
     /**
@@ -23,16 +23,16 @@ namespace vectorMath {
     //% group=Create
     //% blockId=createVectorLine
     //% blockSetVariable=arrow_sprite
-    //% block="create arrow %from_sprite=variables_get(from_sprite) for $vector_as_text=variables_get(vector_as_text) %color"
+    //% block="create arrow %from_sprite=variables_get(from_sprite) for $vector_as_text=variables_get(vector_as_text) %color and %tip_color"
     //% sVector.defl="0|0"
     //% color.min=0 color.max-15 color.defl=2
-    export function draw_line_from_sprite_along_vector (from_sprite: Sprite, vector_as_text: string, color:number) :Sprite{
+    export function draw_line_from_sprite_along_vector (from_sprite: Sprite, vector_as_text: string, color:number, tip_color: number): Sprite{
         let V_tmp = createVectorFromText(vector_as_text)  
-        console.log("-----------------draw_line_from_sprite_along_vector")
-        console.log("Vmag = " + V_tmp.mag + " Vdir_degrees = " + V_tmp.dir_degrees + " Vdir_radians = " + V_tmp.dir_radians)
-        console.log("Vx = " + V_tmp.x + " Vy = " + V_tmp.y)
-        let wh = Math.max(Math.abs(V_tmp.x), Math.abs(V_tmp.y)) 
-        console.log("wh = " + wh )
+        // console.log("-----------------draw_line_from_sprite_along_vector")
+        // console.log("Vmag = " + V_tmp.mag + " Vdir_degrees = " + V_tmp.dir_degrees + " Vdir_radians = " + V_tmp.dir_radians)
+        // console.log("Vx = " + V_tmp.x + " Vy = " + V_tmp.y)
+        let wh = Math.max(Math.abs(V_tmp.x), Math.abs(V_tmp.y)) + 1
+        // console.log("wh = " + wh )
         let line_image = image.create(wh, wh)
         let line_sprite = sprites.create(line_image, SpriteKind.Player)
         let x_from: number = 0
@@ -53,9 +53,10 @@ namespace vectorMath {
             y_from = Math.abs(V_tmp.y)
             line_sprite.top = V_tmp.y + from_sprite.y
         }
-        console.log("x_from = " + x_from + "    x_to = " + x_to) 
-        console.log("y_from = " + y_from + "    y_to = " + y_to)
+        // console.log("x_from = " + x_from + "    x_to = " + x_to) 
+        // console.log("y_from = " + y_from + "    y_to = " + y_to)
         line_image.drawLine(x_from, y_from, x_to, y_to, color)
+        line_image.setPixel(x_to, y_to, tip_color)
         return line_sprite
     }
     //% group="Create"
@@ -100,8 +101,8 @@ namespace vectorMath {
     //% x.min=0 x.max=159 x.defl=0
     //% y.min=0 y.max=119 y.defl=0
     export function createVectorXY(x: number, y: number): Vector {
-        let mag = Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)))
-        let dir = Vector.rad2deg( 1 / Math.tan(y / x))
+        let mag = Math.round(Math.sqrt(x * x + y * y))
+        let dir = Vector.rad2deg( Math.atan(y / x))
         return new Vector(mag, dir)
     }   // createVector()
     /**
@@ -121,7 +122,7 @@ namespace vectorMath {
      */
     //% group=Properties
     //% blockSetVariable=myText
-    //% block="get vetcor %v=variables_get(myVector) as text"
+    //% block="vetcor %v=variables_get(myVector) as text"
     export function text(v:Vector): string {
         return v.mag.toString() + "|" +  v.dir_degrees.toString()
     }
